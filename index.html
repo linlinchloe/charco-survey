@@ -128,21 +128,15 @@ button.go:disabled{background:#c6cec1;cursor:default}
 
       <div class="field">
         <label>姓名／稱呼<span class="req">*</span></label>
-        <input type="text" id="c_name" name="name" autocomplete="name" placeholder="怎麼稱呼您都可以">
+        <input type="text" id="c_name" name="name" autocomplete="name">
       </div>
       <div class="field">
         <label>手機<span class="req">*</span></label>
         <input type="tel" id="c_phone" name="phone" autocomplete="tel" inputmode="numeric" placeholder="0912345678">
       </div>
-      <div class="field row2">
-        <div>
-          <label>公司／農場名稱<span class="opt-tag">選填</span></label>
-          <input type="text" id="c_org" autocomplete="organization" placeholder="○○農場">
-        </div>
-        <div>
-          <label>職稱<span class="opt-tag">選填</span></label>
-          <input type="text" id="c_title" autocomplete="organization-title" placeholder="場長">
-        </div>
+      <div class="field">
+        <label>公司／農場名稱<span class="opt-tag">選填</span></label>
+        <input type="text" id="c_org" autocomplete="organization" placeholder="○○農場">
       </div>
       <div class="field">
         <label>LINE ID<span class="opt-tag">選填</span></label>
@@ -440,7 +434,6 @@ async function submit() {
   Object.assign(data, {
     name, phone,
     org:   $("#c_org").value.trim(),
-    title: $("#c_title").value.trim(),
     line:  $("#c_line").value.trim(),
     city:  $("#c_city").value,
     town:  $("#c_town").value.trim(),
