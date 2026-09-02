@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>恰口科研 農業需求調查</title>
+<meta name="theme-color" content="#8DC63F">
+<style>
+:root{
+  --green:#8DC63F; --deep:#629626; --gray:#787C80; --ink:#464F4B;
+  --line:#e3e6e2; --bg:#f6f8f4; --card:#fff; --err:#d64545;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.7; font-size:16px;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 0 120px}
+
+/* 頁首 */
+header{background:#fff;padding:22px 20px 18px;text-align:center;border-bottom:3px solid var(--green)}
+header img{width:64px;height:64px;border-radius:50%;object-fit:contain;display:block;margin:0 auto 10px}
+header .brand{font-size:15px;color:var(--deep);font-weight:700;letter-spacing:.06em}
+header h1{font-size:20px;margin:6px 0 4px;color:var(--ink);font-weight:800;line-height:1.4}
+header p{margin:0;font-size:13.5px;color:var(--gray)}
+
+/* 進度 */
+.bar{position:sticky;top:0;z-index:20;height:5px;background:#e8ece6}
+.bar span{display:block;height:100%;width:0;background:var(--green);transition:width .25s ease}
+
+/* 題目卡 */
+.q{background:var(--card);margin:14px 12px;border-radius:14px;padding:18px 16px 16px;
+   border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.q.hidden{display:none}
+.q.invalid{border-color:var(--err);box-shadow:0 0 0 3px rgba(214,69,69,.08)}
+.qt{font-size:16.5px;font-weight:700;margin:0 0 4px;line-height:1.55}
+.qt .no{color:var(--deep);margin-right:6px}
+.req{color:var(--err);font-weight:700;margin-left:4px}
+.hint{font-size:13px;color:var(--gray);margin:0 0 12px}
+.err{display:none;font-size:13px;color:var(--err);margin-top:10px;font-weight:600}
+.q.invalid .err{display:block}
+
+/* 選項 */
+.opt{display:flex;align-items:flex-start;gap:11px;padding:11px 12px;margin-bottom:8px;
+     border:1.5px solid var(--line);border-radius:10px;cursor:pointer;background:#fff;
+     transition:border-color .15s,background .15s}
+.opt:last-of-type{margin-bottom:0}
+.opt input{width:21px;height:21px;margin:1px 0 0;accent-color:var(--green);flex:none}
+.opt span{flex:1;font-size:15.5px}
+.opt.on{border-color:var(--green);background:#f4faec}
+.opt.dim{opacity:.42}
+
+/* 輸入 */
+input[type=text],input[type=tel],select,textarea{
+  width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:10px;
+  font-size:16px;font-family:inherit;color:var(--ink);background:#fff;appearance:none}
+input:focus,select:focus{outline:none;border-color:var(--green)}
+.other-in{margin-top:8px;display:none}
+.other-in.show{display:block}
+
+/* 聯絡區 */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+.field label .opt-tag{font-weight:400;color:var(--gray);font-size:12.5px;margin-left:5px}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1;min-width:0}
+select{background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23787C80' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+
+/* 同意 */
+.consent{background:#fbfcfa;border:1.5px solid var(--line);border-radius:10px;padding:13px;margin-top:6px}
+.consent .opt{border:none;background:none;padding:4px 0;margin:0}
+.consent .opt span{font-size:14px;line-height:1.65}
+.consent .opt.on{background:none}
+.privacy{font-size:12.5px;color:var(--gray);margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--line)}
+
+/* 送出 */
+.submit-zone{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 12px calc(12px + env(safe-area-inset-bottom));z-index:30}
+button.go{width:100%;max-width:616px;margin:0 auto;display:block;padding:16px;border:none;border-radius:12px;
+  background:var(--green);color:#fff;font-size:17.5px;font-weight:800;font-family:inherit;cursor:pointer;letter-spacing:.05em}
+button.go:active{background:var(--deep)}
+button.go:disabled{background:#c6cec1;cursor:default}
+
+/* 完成頁 */
+#done{display:none;position:fixed;inset:0;background:#fff;z-index:100;overflow-y:auto;
+  padding:calc(40px + env(safe-area-inset-top)) 22px calc(40px + env(safe-area-inset-bottom));text-align:center}
+#done.show{display:block}
+.tick{width:96px;height:96px;border-radius:50%;background:var(--green);margin:14px auto 22px;
+  display:flex;align-items:center;justify-content:center;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.tick svg{width:50px;height:50px}
+#done h2{font-size:32px;margin:0 0 6px;color:var(--deep);font-weight:900;letter-spacing:.08em}
+#done .sub{font-size:15px;color:var(--gray);margin:0 0 26px}
+.serial{border:3px solid var(--green);border-radius:16px;padding:20px 16px;max-width:340px;margin:0 auto 22px;background:#f4faec}
+.serial .lb{font-size:13px;color:var(--deep);font-weight:700;letter-spacing:.16em;margin-bottom:4px}
+.serial .num{font-size:46px;font-weight:900;color:var(--ink);letter-spacing:.06em;line-height:1.1;font-variant-numeric:tabular-nums}
+.serial .tm{font-size:12.5px;color:var(--gray);margin-top:8px}
+.note{max-width:360px;margin:0 auto;background:#fffbea;border:1px solid #f0e2ae;border-radius:12px;padding:14px;font-size:14.5px;line-height:1.75;color:#7a6a2f}
+.note b{color:var(--deep)}
+.offline-tag{display:inline-block;background:#fff2f2;color:var(--err);border:1px solid #f3c9c9;
+  border-radius:20px;padding:3px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px}
+.thanks{font-size:14px;color:var(--gray);margin-top:28px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="bar"><span id="prog"></span></div>
+
+<div class="wrap">
+  <header>
+    <img src="logo.png" alt="恰口科研" onerror="this.style.display='none'">
+    <div class="brand">恰口科研 CHARCO</div>
+    <h1>農業需求調查</h1>
+    <p>1 分鐘，幫您找到適合的永續農業方案</p>
+  </header>
+
+  <form id="form" autocomplete="on" novalidate>
+    <div id="qs"></div>
+
+    <!-- Q9 聯絡方式 -->
+    <div class="q" id="q9">
+      <p class="qt"><span class="no">Q9</span>聯絡方式<span class="req">*</span></p>
+      <p class="hint">現場兌換獎品需要核對，手機請填正確號碼。</p>
+
+      <div class="field">
+        <label>姓名／稱呼<span class="req">*</span></label>
+        <input type="text" id="c_name" name="name" autocomplete="name" placeholder="怎麼稱呼您都可以">
+      </div>
+      <div class="field">
+        <label>手機<span class="req">*</span></label>
+        <input type="tel" id="c_phone" name="phone" autocomplete="tel" inputmode="numeric" placeholder="0912345678">
+      </div>
+      <div class="field row2">
+        <div>
+          <label>公司／農場名稱<span class="opt-tag">選填</span></label>
+          <input type="text" id="c_org" autocomplete="organization" placeholder="○○農場">
+        </div>
+        <div>
+          <label>職稱<span class="opt-tag">選填</span></label>
+          <input type="text" id="c_title" autocomplete="organization-title" placeholder="場長">
+        </div>
+      </div>
+      <div class="field">
+        <label>LINE ID<span class="opt-tag">選填</span></label>
+        <input type="text" id="c_line" placeholder="若與手機不同再填">
+      </div>
+      <div class="field row2">
+        <div>
+          <label>作物園區縣市<span class="opt-tag">選填</span></label>
+          <select id="c_city"><option value="">請選擇</option></select>
+        </div>
+        <div>
+          <label>鄉鎮市區<span class="opt-tag">選填</span></label>
+          <input type="text" id="c_town" placeholder="例如：大湖鄉">
+        </div>
+      </div>
+      <div class="field">
+        <label>種植規模<span class="opt-tag">選填</span></label>
+        <select id="c_scale">
+          <option value="">請選擇</option>
+          <option>1 甲以下</option><option>1～5 甲</option><option>5～10 甲</option>
+          <option>10～30 甲</option><option>30 甲以上</option>
+        </select>
+      </div>
+      <p class="err">請填寫稱呼與手機（手機請填 09 開頭 10 碼，例如 0912345678）</p>
+    </div>
+
+    <!-- 同意 -->
+    <div class="q" id="qc">
+      <p class="qt">同意事項</p>
+      <div class="consent">
+        <label class="opt" data-c="1">
+          <input type="checkbox" id="ag_pdpa">
+          <span><b>（必填）</b>我同意恰口科研蒐集本問卷填寫的個人資料，用於本次展場活動的獎品兌換與問卷分析。</span>
+        </label>
+        <label class="opt" data-c="1">
+          <input type="checkbox" id="ag_mkt">
+          <span>（選填）我願意收到恰口科研後續的產品、活動及合作資訊。</span>
+        </label>
+        <p class="privacy">
+          恰口科研企業股份有限公司依《個人資料保護法》蒐集與利用上述資料，保存期間為蒐集目的存續期間。
+          您可隨時來信 <b>charcote2018@gmail.com</b> 要求查詢、更正或刪除您的資料，不影響本次獎品兌換。
+        </p>
+      </div>
+      <p class="err">請勾選必填的個資同意項目</p>
+    </div>
+  </form>
+</div>
+
+<div class="submit-zone">
+  <button class="go" id="btn" type="button">送出問卷，領取獎品</button>
+</div>
+
+<!-- 完成頁 -->
+<div id="done">
+  <div class="tick"><svg viewBox="0 0 52 52"><path d="M13 27l9 9 17-19" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div id="off_tag" class="offline-tag" style="display:none">離線暫存碼</div>
+  <h2>已填寫完成</h2>
+  <p class="sub">感謝您協助恰口科研的農業需求調查</p>
+  <div class="serial">
+    <div class="lb">問 卷 編 號</div>
+    <div class="num" id="serial">—</div>
+    <div class="tm" id="stamp"></div>
+  </div>
+  <div class="note">
+    請將<b>這個畫面</b>出示給恰口科研攤位的工作人員，<br>即可兌換現場獎品。<br>
+    <b>本畫面每人限兌換一次。</b>
+  </div>
+  <p class="thanks">
+    恰口科研 CHARCO<br>
+    天然植物保護 ‧ 採後保鮮技術<br>
+    charcote2018@gmail.com
+  </p>
+</div>
+
+<script>
+/* ===================================================================
+   設定區：要改題目文字、選項，改這裡就好
+   =================================================================== */
+
+// Google Apps Script 網頁應用程式網址（部署後貼進來，見 README.md）
+const GAS_URL = "";
+
+const QUESTIONS = [
+  { id:"q1", no:"Q1", type:"radio", required:true,
+    title:"您目前的身分是？",
+    options:["農友／農場經營者","農企業","農產品加工／食品業","通路／經銷商","農業資材業者","研究／學術單位","政府／法人"],
+    other:true },
+
+  { id:"q2", no:"Q2", type:"text",
+    title:"您主要從事的農業類型／作物為何？",
+    hint:"例如：草莓、芭樂、木瓜（選填）",
+    placeholder:"請輸入作物名稱" },
+
+  { id:"q3", no:"Q3", type:"checkbox", required:true,
+    title:"您目前最希望改善的問題？",
+    hint:"可複選",
+    options:["病蟲害防治","農產品保鮮","土壤健康","農業廢棄物再利用","減少化學資材使用","農產品品質提升","農業資材成本","永續農業"],
+    other:true },
+
+  { id:"q4", no:"Q4", type:"checkbox",
+    title:"您平常購買農業資材的主要管道？",
+    hint:"可複選（選填）",
+    options:["農會","農業資材行","網路／電商","廠商直接購買"],
+    other:true },
+
+  { id:"q5", no:"Q5", type:"checkbox",
+    title:"您通常如何選擇農業資材？",
+    hint:"可複選（選填）",
+    options:["鄰居／親友／其他農友推薦","農業改良場／農業專家建議","農會人員推薦","農業資材行推薦","廠商／業務推薦","自己上網查詢","過去使用經驗","價格","品牌／口碑"],
+    other:true },
+
+  { id:"q6", no:"Q6", type:"radio", required:true,
+    title:"您過去是否使用過「免登記植物保護資材」？",
+    options:["有","沒有","聽過，但不清楚是什麼","不確定"] },
+
+  { id:"q6_1", no:"Q6-1", type:"checkbox",
+    title:"您使用免登記植物保護資材的主要原因？",
+    hint:"可複選",
+    showIf:{ q:"q6", value:"有" },
+    options:["希望降低農業用藥","天然／友善環境","農友推薦","農會／農改場推薦","廠商推薦","使用方便"],
+    other:true },
+
+  { id:"q7", no:"Q7", type:"checkbox", required:true, max:3,
+    title:"如果您要嘗試新的農業資材，最重視哪些條件？",
+    hint:"可複選，最多 3 項",
+    options:["實際使用效果","安全性","天然／友善環境","是否有實際田間案例","農友使用口碑","農業改良場／專業單位推薦","品牌／公司信譽","價格","是否容易購買","是否有專業技術服務"],
+    other:true },
+
+  { id:"q8", no:"Q8", type:"checkbox", required:true, exclusive:"都沒用過",
+    title:"您是否使用過恰口科研的產品？",
+    hint:"可複選",
+    options:["碳晶讚","甲晶讚","切口保鮮","都沒用過"] }
+];
+
+const CITIES = ["基隆市","臺北市","新北市","桃園市","新竹市","新竹縣","苗栗縣","臺中市","彰化縣","南投縣",
+"雲林縣","嘉義市","嘉義縣","臺南市","高雄市","屏東縣","宜蘭縣","花蓮縣","臺東縣","澎湖縣","金門縣","連江縣"];
+
+/* ===================================================================
+   以下不用改
+   =================================================================== */
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// --- 產生題目 ---
+$("#qs").innerHTML = QUESTIONS.map(q => {
+  let body = "";
+  if (q.type === "text") {
+    body = `<input type="text" id="in_${q.id}" placeholder="${esc(q.placeholder||"")}">`;
+  } else {
+    const inputType = q.type === "radio" ? "radio" : "checkbox";
+    body = q.options.map(o =>
+      `<label class="opt"><input type="${inputType}" name="${q.id}" value="${esc(o)}"><span>${esc(o)}</span></label>`
+    ).join("");
+    if (q.other) {
+      body += `<label class="opt"><input type="${inputType}" name="${q.id}" value="其他" data-other="1"><span>其他</span></label>`
+            + `<div class="other-in" id="oi_${q.id}"><input type="text" placeholder="請說明"></div>`;
+    }
+  }
+  return `<div class="q${q.showIf ? " hidden" : ""}" id="${q.id}">
+    <p class="qt"><span class="no">${q.no}</span>${esc(q.title)}${q.required ? '<span class="req">*</span>' : ""}</p>
+    ${q.hint ? `<p class="hint">${esc(q.hint)}</p>` : ""}
+    ${body}
+    <p class="err">${q.max ? `請至少選 1 項，最多 ${q.max} 項` : "這題請務必回答"}</p>
+  </div>`;
+}).join("");
+
+CITIES.forEach(c => $("#c_city").insertAdjacentHTML("beforeend", `<option>${c}</option>`));
+
+// --- 選項互動 ---
+document.addEventListener("change", e => {
+  const el = e.target;
+  if (el.name) {
+    const q = QUESTIONS.find(x => x.id === el.name);
+    if (q) {
+      const box = document.getElementById(q.id);
+      const all = [...box.querySelectorAll('input[name="' + q.id + '"]')];
+
+      // 互斥選項（例如「都沒用過」）
+      if (q.exclusive) {
+        if (el.checked && el.value === q.exclusive) {
+          all.forEach(i => { if (i !== el) i.checked = false; });
+        } else if (el.checked) {
+          all.forEach(i => { if (i.value === q.exclusive) i.checked = false; });
+        }
+      }
+      // 上限
+      if (q.max) {
+        const n = all.filter(i => i.checked).length;
+        if (n > q.max) { el.checked = false; }
+        const full = all.filter(i => i.checked).length >= q.max;
+        all.forEach(i => i.closest(".opt").classList.toggle("dim", full && !i.checked));
+      }
+      all.forEach(i => i.closest(".opt").classList.toggle("on", i.checked));
+      const oi = document.getElementById("oi_" + q.id);
+      if (oi) {
+        const otherChecked = all.some(i => i.dataset.other && i.checked);
+        oi.classList.toggle("show", otherChecked);
+        if (!otherChecked) oi.querySelector("input").value = "";
+      }
+      box.classList.remove("invalid");
+    }
+  }
+  if (el.id === "ag_pdpa" || el.id === "ag_mkt") {
+    el.closest(".opt").classList.toggle("on", el.checked);
+    $("#qc").classList.remove("invalid");
+  }
+  applyConditions();
+  updateProgress();
+});
+document.addEventListener("input", e => {
+  if (["c_name","c_phone"].includes(e.target.id)) $("#q9").classList.remove("invalid");
+  updateProgress();
+});
+
+// --- 條件顯示 Q6-1 ---
+function applyConditions() {
+  QUESTIONS.filter(q => q.showIf).forEach(q => {
+    const src = document.querySelector('input[name="' + q.showIf.q + '"]:checked');
+    const show = src && src.value === q.showIf.value;
+    const box = document.getElementById(q.id);
+    box.classList.toggle("hidden", !show);
+    if (!show) {
+      box.querySelectorAll("input").forEach(i => { i.checked = false; i.value = i.type === "text" ? "" : i.value; });
+      box.querySelectorAll(".opt").forEach(o => o.classList.remove("on"));
+      const oi = document.getElementById("oi_" + q.id);
+      if (oi) oi.classList.remove("show");
+    }
+  });
+}
+
+// --- 進度條 ---
+function updateProgress() {
+  const need = [...QUESTIONS.filter(q => q.required).map(q => q.id), "q9", "qc"];
+  const done = need.filter(id => {
+    if (id === "q9") return $("#c_name").value.trim() && cleanPhone($("#c_phone").value);
+    if (id === "qc") return $("#ag_pdpa").checked;
+    return document.querySelector('#' + id + ' input:checked');
+  }).length;
+  $("#prog").style.width = Math.round(done / need.length * 100) + "%";
+}
+
+const cleanPhone = v => {
+  const d = String(v).replace(/\D/g, "");
+  return /^09\d{8}$/.test(d) ? d : "";
+};
+
+// --- 收集答案 ---
+function collect(q) {
+  const box = document.getElementById(q.id);
+  if (q.type === "text") return document.getElementById("in_" + q.id).value.trim();
+  const picked = [...box.querySelectorAll('input[name="' + q.id + '"]:checked')].map(i => i.value);
+  const oi = document.getElementById("oi_" + q.id);
+  if (oi && picked.includes("其他")) {
+    const t = oi.querySelector("input").value.trim();
+    const i = picked.indexOf("其他");
+    picked[i] = t ? "其他：" + t : "其他";
+  }
+  return q.type === "radio" ? (picked[0] || "") : picked.join("、");
+}
+
+// --- 驗證＋送出 ---
+$("#btn").addEventListener("click", submit);
+
+let sending = false;
+async function submit() {
+  if (sending) return;
+  let firstBad = null;
+
+  QUESTIONS.forEach(q => {
+    const box = document.getElementById(q.id);
+    box.classList.remove("invalid");
+    if (!q.required || box.classList.contains("hidden")) return;
+    if (!box.querySelector('input[name="' + q.id + '"]:checked')) {
+      box.classList.add("invalid");
+      firstBad = firstBad || box;
+    }
+  });
+
+  const name = $("#c_name").value.trim();
+  const phone = cleanPhone($("#c_phone").value);
+  $("#q9").classList.remove("invalid");
+  if (!name || !phone) { $("#q9").classList.add("invalid"); firstBad = firstBad || $("#q9"); }
+
+  $("#qc").classList.remove("invalid");
+  if (!$("#ag_pdpa").checked) { $("#qc").classList.add("invalid"); firstBad = firstBad || $("#qc"); }
+
+  if (firstBad) { firstBad.scrollIntoView({behavior:"smooth", block:"center"}); return; }
+
+  const data = { ts: new Date().toLocaleString("zh-TW", {hour12:false}), event:"2026智慧農漁週" };
+  QUESTIONS.forEach(q => {
+    const box = document.getElementById(q.id);
+    data[q.id] = box.classList.contains("hidden") ? "" : collect(q);
+  });
+  Object.assign(data, {
+    name, phone,
+    org:   $("#c_org").value.trim(),
+    title: $("#c_title").value.trim(),
+    line:  $("#c_line").value.trim(),
+    city:  $("#c_city").value,
+    town:  $("#c_town").value.trim(),
+    scale: $("#c_scale").value,
+    agree_pdpa: "是",
+    agree_mkt:  $("#ag_mkt").checked ? "是" : "否"
+  });
+
+  sending = true;
+  $("#btn").disabled = true;
+  $("#btn").textContent = "送出中，請稍候…";
+
+  let serial = "", offline = false;
+  try {
+    serial = await send(data);
+  } catch (err) {
+    offline = true;
+    serial = localCode();
+    try {
+      const q = JSON.parse(localStorage.getItem("charco_pending") || "[]");
+      q.push({ ...data, local_code: serial });
+      localStorage.setItem("charco_pending", JSON.stringify(q));
+    } catch (e) {}
+  }
+  finish(serial, offline);
+}
+
+async function send(data) {
+  if (!GAS_URL) throw new Error("no endpoint");
+  for (let i = 0; i < 2; i++) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 9000);
+      const res = await fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, // 用 text/plain 避開 CORS 預檢
+        body: JSON.stringify(data),
+        signal: ctrl.signal
+      });
+      clearTimeout(timer);
+      const out = await res.json();
+      if (out && out.serial) return out.serial;
+      throw new Error("bad response");
+    } catch (e) {
+      if (i === 1) throw e;
+    }
+  }
+}
+
+// 離線備用碼：以時間產生，工作人員一樣可核銷
+function localCode() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  return "L" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+
+function finish(serial, offline) {
+  $("#serial").textContent = serial;
+  $("#stamp").textContent = new Date().toLocaleString("zh-TW", {hour12:false});
+  $("#off_tag").style.display = offline ? "inline-block" : "none";
+  $("#done").classList.add("show");
+  window.scrollTo(0, 0);
+  document.body.style.overflow = "hidden";
+}
+
+applyConditions();
+updateProgress();
+</script>
+</body>
+</html>
