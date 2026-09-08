@@ -111,9 +111,12 @@ button.go:disabled{background:#c6cec1;cursor:default}
 </head>
 <body>
 
-<div style="background:#464F4B;color:#fff;padding:9px 12px;text-align:center;font-size:13px;line-height:1.6">
-  這是<b>預覽版</b>，給鈴鈴確認用<br>送出不會寫進試算表
+<div style="position:fixed;top:0;left:0;right:0;z-index:300;background:#d64545;color:#fff;
+     padding:9px 12px;text-align:center;font-size:13px;line-height:1.5;font-weight:700">
+  預覽版　資料不會寫入試算表<br>
+  <span style="font-weight:400">送出必定顯示 L 開頭的離線碼，這是正常的</span>
 </div>
+<div style="height:56px"></div>
 <div class="bar"><span id="prog"></span></div>
 
 <div class="wrap">
@@ -205,7 +208,7 @@ button.go:disabled{background:#c6cec1;cursor:default}
 <!-- 完成頁 -->
 <div id="done">
   <div class="tick"><svg viewBox="0 0 52 52"><path d="M13 27l9 9 17-19" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-  <div id="off_tag" class="offline-tag" style="display:none">離線暫存碼</div>
+  <div id="off_tag" class="offline-tag" style="display:none">預覽版・未寫入試算表</div>
   <h2>已填寫完成</h2>
   <p class="sub">感謝您協助恰口科研的農業需求調查</p>
   <div class="serial">
@@ -231,7 +234,7 @@ button.go:disabled{background:#c6cec1;cursor:default}
    =================================================================== */
 
 // Google Apps Script 網頁應用程式網址（部署後貼進來，見 README.md）
-const GAS_URL = "";   // 預覽版：不連後端，送出不會寫進正式試算表
+const GAS_URL = "";   // 預覽版：不連後端
 
 const QUESTIONS = [
   { id:"q1", no:"Q1", type:"radio", required:true,
