@@ -66,6 +66,7 @@ input:focus,select:focus{outline:none;border-color:var(--green)}
 .field label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
 .field label .opt-tag{font-weight:400;color:var(--gray);font-size:12.5px;margin-left:5px}
 .field .sub-hint{font-size:12.5px;color:var(--gray);margin:6px 0 0;line-height:1.6}
+.group-label{font-size:14px;font-weight:700;margin:18px 0 8px;padding-top:14px;border-top:1px dashed var(--line)}
 .field.bad input,.field.bad select{border-color:var(--err);background:#fff8f8}
 .row2{display:flex;gap:10px}
 .row2>*{flex:1;min-width:0}
@@ -141,13 +142,19 @@ button.go:disabled{background:#c6cec1;cursor:default}
         <input type="text" id="c_org" autocomplete="organization" placeholder="○○農場">
       </div>
       <div class="field">
+        <label>地址<span class="req">*</span></label>
+        <input type="text" id="c_addr" autocomplete="street-address" placeholder="例如：苗栗縣大湖鄉富興村中原路 12 號">
+        <p class="sub-hint">請填寫<b>完整地址</b>，含縣市、鄉鎮市區、路名與門牌號碼。</p>
+      </div>
+      <div class="field">
         <label>LINE ID<span class="opt-tag">選填</span></label>
         <input type="text" id="c_line" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例如：charco2018">
         <p class="sub-hint">找法：LINE →「主頁」→ 右上角齒輪 →「個人檔案」→「ID」</p>
       </div>
+      <p class="group-label">作物種在哪裡<span class="req">*</span></p>
       <div class="field row2">
         <div>
-          <label>作物園區縣市<span class="req">*</span></label>
+          <label>縣市<span class="req">*</span></label>
           <select id="c_city"><option value="">請選擇</option></select>
         </div>
         <div>
@@ -352,7 +359,7 @@ document.addEventListener("change", e => {
   applyConditions();
   updateProgress();
 });
-const CONTACT_REQ = ["c_name","c_phone","c_city","c_town"];
+const CONTACT_REQ = ["c_name","c_phone","c_addr","c_city","c_town"];
 function clearContactError(el) {
   if (!CONTACT_REQ.includes(el.id)) return;
   el.closest(".field").classList.remove("bad");
@@ -381,6 +388,7 @@ function updateProgress() {
   const need = [...QUESTIONS.filter(q => q.required).map(q => q.id), "q9", "qc"];
   const done = need.filter(id => {
     if (id === "q9") return $("#c_name").value.trim() && cleanPhone($("#c_phone").value)
+                          && $("#c_addr").value.trim()
                           && $("#c_city").value && $("#c_town").value.trim();
     if (id === "qc") return $("#ag_pdpa").checked;
     return document.querySelector('#' + id + ' input:checked');
@@ -428,11 +436,12 @@ async function submit() {
   const name = $("#c_name").value.trim();
   const phone = cleanPhone($("#c_phone").value);
   const lineId = $("#c_line").value.trim();
+  const addr = $("#c_addr").value.trim();
   const city = $("#c_city").value;
   const town = $("#c_town").value.trim();
 
   $("#q9").classList.remove("invalid");
-  const bad = [["#c_name", !name], ["#c_phone", !phone],
+  const bad = [["#c_name", !name], ["#c_phone", !phone], ["#c_addr", !addr],
                ["#c_city", !city], ["#c_town", !town]];
   bad.forEach(([sel, isBad]) => $(sel).closest(".field").classList.toggle("bad", isBad));
   if (bad.some(([, isBad]) => isBad)) {
@@ -453,6 +462,7 @@ async function submit() {
   Object.assign(data, {
     name, phone,
     org:   $("#c_org").value.trim(),
+    addr:  addr,
     line:  lineId,
     city:  city,
     town:  town,
