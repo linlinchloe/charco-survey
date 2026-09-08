@@ -65,6 +65,8 @@ input:focus,select:focus{outline:none;border-color:var(--green)}
 .field:last-child{margin-bottom:0}
 .field label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
 .field label .opt-tag{font-weight:400;color:var(--gray);font-size:12.5px;margin-left:5px}
+.field .sub-hint{font-size:12.5px;color:var(--gray);margin:6px 0 0;line-height:1.6}
+.field.bad input,.field.bad select{border-color:var(--err);background:#fff8f8}
 .row2{display:flex;gap:10px}
 .row2>*{flex:1;min-width:0}
 select{background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23787C80' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -139,16 +141,17 @@ button.go:disabled{background:#c6cec1;cursor:default}
         <input type="text" id="c_org" autocomplete="organization" placeholder="○○農場">
       </div>
       <div class="field">
-        <label>LINE ID<span class="opt-tag">選填</span></label>
-        <input type="text" id="c_line" placeholder="若與手機不同再填">
+        <label>LINE ID<span class="req">*</span></label>
+        <input type="text" id="c_line" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例如：charco2018">
+        <p class="sub-hint">找法：LINE →「主頁」→ 右上角齒輪 →「個人檔案」→「ID」</p>
       </div>
       <div class="field row2">
         <div>
-          <label>作物園區縣市<span class="opt-tag">選填</span></label>
+          <label>作物園區縣市<span class="req">*</span></label>
           <select id="c_city"><option value="">請選擇</option></select>
         </div>
         <div>
-          <label>鄉鎮市區<span class="opt-tag">選填</span></label>
+          <label>鄉鎮市區<span class="req">*</span></label>
           <input type="text" id="c_town" placeholder="例如：大湖鄉">
         </div>
       </div>
@@ -160,7 +163,7 @@ button.go:disabled{background:#c6cec1;cursor:default}
           <option>10～30 甲</option><option>30 甲以上</option>
         </select>
       </div>
-      <p class="err">請填寫稱呼與手機（手機請填 09 開頭 10 碼，例如 0912345678）</p>
+      <p class="err">有必填欄位還沒填（紅框處）。手機請填 09 開頭 10 碼，例如 0912345678</p>
     </div>
 
     <!-- 同意 -->
@@ -340,6 +343,7 @@ document.addEventListener("change", e => {
       box.classList.remove("invalid");
     }
   }
+  clearContactError(el);
   if (el.id === "ag_pdpa" || el.id === "ag_mkt") {
     el.closest(".opt").classList.toggle("on", el.checked);
     $("#qc").classList.remove("invalid");
@@ -347,10 +351,13 @@ document.addEventListener("change", e => {
   applyConditions();
   updateProgress();
 });
-document.addEventListener("input", e => {
-  if (["c_name","c_phone"].includes(e.target.id)) $("#q9").classList.remove("invalid");
-  updateProgress();
-});
+const CONTACT_REQ = ["c_name","c_phone","c_line","c_city","c_town"];
+function clearContactError(el) {
+  if (!CONTACT_REQ.includes(el.id)) return;
+  el.closest(".field").classList.remove("bad");
+  if (!$("#q9").querySelector(".field.bad")) $("#q9").classList.remove("invalid");
+}
+document.addEventListener("input", e => { clearContactError(e.target); updateProgress(); });
 
 // --- 條件顯示 Q6-1 ---
 function applyConditions() {
@@ -372,7 +379,8 @@ function applyConditions() {
 function updateProgress() {
   const need = [...QUESTIONS.filter(q => q.required).map(q => q.id), "q9", "qc"];
   const done = need.filter(id => {
-    if (id === "q9") return $("#c_name").value.trim() && cleanPhone($("#c_phone").value);
+    if (id === "q9") return $("#c_name").value.trim() && cleanPhone($("#c_phone").value)
+                          && $("#c_line").value.trim() && $("#c_city").value && $("#c_town").value.trim();
     if (id === "qc") return $("#ag_pdpa").checked;
     return document.querySelector('#' + id + ' input:checked');
   }).length;
@@ -418,8 +426,18 @@ async function submit() {
 
   const name = $("#c_name").value.trim();
   const phone = cleanPhone($("#c_phone").value);
+  const lineId = $("#c_line").value.trim();
+  const city = $("#c_city").value;
+  const town = $("#c_town").value.trim();
+
   $("#q9").classList.remove("invalid");
-  if (!name || !phone) { $("#q9").classList.add("invalid"); firstBad = firstBad || $("#q9"); }
+  const bad = [["#c_name", !name], ["#c_phone", !phone], ["#c_line", !lineId],
+               ["#c_city", !city], ["#c_town", !town]];
+  bad.forEach(([sel, isBad]) => $(sel).closest(".field").classList.toggle("bad", isBad));
+  if (bad.some(([, isBad]) => isBad)) {
+    $("#q9").classList.add("invalid");
+    firstBad = firstBad || $("#q9");
+  }
 
   $("#qc").classList.remove("invalid");
   if (!$("#ag_pdpa").checked) { $("#qc").classList.add("invalid"); firstBad = firstBad || $("#qc"); }
@@ -434,9 +452,9 @@ async function submit() {
   Object.assign(data, {
     name, phone,
     org:   $("#c_org").value.trim(),
-    line:  $("#c_line").value.trim(),
-    city:  $("#c_city").value,
-    town:  $("#c_town").value.trim(),
+    line:  lineId,
+    city:  city,
+    town:  town,
     scale: $("#c_scale").value,
     agree_pdpa: "是",
     agree_mkt:  $("#ag_mkt").checked ? "是" : "否"
