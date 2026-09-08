@@ -141,7 +141,7 @@ button.go:disabled{background:#c6cec1;cursor:default}
         <input type="text" id="c_org" autocomplete="organization" placeholder="○○農場">
       </div>
       <div class="field">
-        <label>LINE ID<span class="req">*</span></label>
+        <label>LINE ID<span class="opt-tag">選填</span></label>
         <input type="text" id="c_line" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例如：charco2018">
         <p class="sub-hint">找法：LINE →「主頁」→ 右上角齒輪 →「個人檔案」→「ID」</p>
       </div>
@@ -351,7 +351,7 @@ document.addEventListener("change", e => {
   applyConditions();
   updateProgress();
 });
-const CONTACT_REQ = ["c_name","c_phone","c_line","c_city","c_town"];
+const CONTACT_REQ = ["c_name","c_phone","c_city","c_town"];
 function clearContactError(el) {
   if (!CONTACT_REQ.includes(el.id)) return;
   el.closest(".field").classList.remove("bad");
@@ -380,7 +380,7 @@ function updateProgress() {
   const need = [...QUESTIONS.filter(q => q.required).map(q => q.id), "q9", "qc"];
   const done = need.filter(id => {
     if (id === "q9") return $("#c_name").value.trim() && cleanPhone($("#c_phone").value)
-                          && $("#c_line").value.trim() && $("#c_city").value && $("#c_town").value.trim();
+                          && $("#c_city").value && $("#c_town").value.trim();
     if (id === "qc") return $("#ag_pdpa").checked;
     return document.querySelector('#' + id + ' input:checked');
   }).length;
@@ -431,7 +431,7 @@ async function submit() {
   const town = $("#c_town").value.trim();
 
   $("#q9").classList.remove("invalid");
-  const bad = [["#c_name", !name], ["#c_phone", !phone], ["#c_line", !lineId],
+  const bad = [["#c_name", !name], ["#c_phone", !phone],
                ["#c_city", !city], ["#c_town", !town]];
   bad.forEach(([sel, isBad]) => $(sel).closest(".field").classList.toggle("bad", isBad));
   if (bad.some(([, isBad]) => isBad)) {
